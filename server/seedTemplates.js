@@ -1,7 +1,7 @@
-require('dotenv').config();
-const fs = require('fs');
 const path = require('path');
-const ragService = require('./services/ragService'); // We will use our ragService to generate embeddings and insert
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+const fs = require('fs');
+const ragService = require('./services/ragServiceV2');
 const supabase = require('./utils/supabaseClient'); // Direct supabase client
 
 // Ensure templates directory exists
@@ -39,11 +39,17 @@ async function seedTemplates() {
       return;
   }
 
-  if(!process.env.GEMINI_API_KEY) {
-      console.error('❌ Missing Gemini API Key in .env (needed for embeddings)');
+  if(!process.env.OPENAI_API_KEY) {
+      console.error('❌ Missing OPENAI_API_KEY in .env (needed for embeddings)');
       return;
   }
 
+  const { error: clearError } = await supabase.from('document_templates').delete().not('id', 'is', null);
+  if (clearError) {
+    console.warn('⚠️  Could not clear document_templates (table may not exist yet):', clearError.message);
+  } else {
+    console.log('🗑️  Cleared existing document_templates rows before seed.');
+  }
 
   for (const template of templatesToSeed) {
     try {
@@ -71,3 +77,4 @@ async function seedTemplates() {
 }
 
 seedTemplates();
+

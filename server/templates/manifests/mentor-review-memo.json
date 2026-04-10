@@ -1,0 +1,9 @@
+{
+  "title": "Mentor Review Memo",
+  "intro": "Auto-generated mentor review memo based on extracted startup submission data.",
+  "sections": [
+    { "heading": "Review Details", "fields": ["startup_name", "mentor_name", "review_date", "program_name"] },
+    { "heading": "Assessment", "fields": ["strengths", "risks", "recommendation", "next_steps"] },
+    { "heading": "Additional Notes", "fields": ["mentor_notes", "comments", "summary"] }
+  ]
+}

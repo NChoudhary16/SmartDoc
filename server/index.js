@@ -1,11 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const upload = require('./middleware/upload');
+const path = require('path');
 const documentRoutes = require('./routes/documentRoutes');
 
-// Load environment variables
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,11 +15,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const authRoutes = require('./routes/authRoutes');
+const templateRoutes = require('./routes/templateRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+
 // Serve static files from uploads (for previewing)
 app.use('/uploads', express.static('uploads'));
 
 // Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/templates', templateRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Root Endpoint
 app.get('/', (req, res) => {

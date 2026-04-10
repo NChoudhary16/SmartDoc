@@ -124,6 +124,12 @@ var __TURBOPACK__imported__module__$5b$next$5d2f$internal$2f$font$2f$google$2f$i
 var __TURBOPACK__imported__module__$5b$next$5d2f$internal$2f$font$2f$google$2f$manrope_28d67df5$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[next]/internal/font/google/manrope_28d67df5.js [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$next$5d2f$internal$2f$font$2f$google$2f$newsreader_2e622ed4$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[next]/internal/font/google/newsreader_2e622ed4.js [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$next$5d2f$internal$2f$font$2f$google$2f$playfair_display_db954489$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[next]/internal/font/google/playfair_display_db954489.js [app-rsc] (ecmascript)");
+(()=>{
+    const e = new Error("Cannot find module './context/AuthContext'");
+    e.code = 'MODULE_NOT_FOUND';
+    throw e;
+})();
+;
 ;
 ;
 ;
@@ -145,33 +151,39 @@ function RootLayout({ children }) {
                     className: "bg-layer-1"
                 }, void 0, false, {
                     fileName: "[project]/client/app/layout.js",
-                    lineNumber: 38,
+                    lineNumber: 40,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "bg-layer-2"
                 }, void 0, false, {
                     fileName: "[project]/client/app/layout.js",
-                    lineNumber: 39,
+                    lineNumber: 41,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "bg-layer-3"
                 }, void 0, false, {
                     fileName: "[project]/client/app/layout.js",
-                    lineNumber: 40,
+                    lineNumber: 42,
                     columnNumber: 9
                 }, this),
-                children
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(AuthProvider, {
+                    children: children
+                }, void 0, false, {
+                    fileName: "[project]/client/app/layout.js",
+                    lineNumber: 43,
+                    columnNumber: 9
+                }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/client/app/layout.js",
-            lineNumber: 37,
+            lineNumber: 39,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/client/app/layout.js",
-        lineNumber: 33,
+        lineNumber: 35,
         columnNumber: 5
     }, this);
 }

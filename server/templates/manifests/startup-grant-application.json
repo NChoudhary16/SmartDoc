@@ -1,0 +1,9 @@
+{
+  "title": "Startup Grant Application",
+  "intro": "Auto-generated institutional grant application draft.",
+  "sections": [
+    { "heading": "Startup Profile", "fields": ["startup_name", "founder_name", "program_name", "contact_email", "contact_phone"] },
+    { "heading": "Funding Request", "fields": ["funding_request", "currency", "use_of_funds", "requested_disbursement_date"] },
+    { "heading": "Business Case", "fields": ["problem_statement", "solution_summary", "traction", "mentor_notes"] }
+  ]
+}

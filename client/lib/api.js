@@ -1,23 +1,76 @@
-// Mock API for Document Management
-export const fetchDocuments = async () => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  return [
-    { id: "DOC-0021", name: "Q4_Strategy_Automation.pdf", type: "Automation", date: "2024-10-14", status: "Pending", user: "Sarah Chen" },
-    { id: "DOC-0022", name: "Market_Research_V2.docx", type: "Extraction", date: "2024-10-14", status: "Reviewing", user: "David Vance" },
-    { id: "DOC-0023", name: "Finance_Report_Final.pdf", type: "Automation", date: "2024-10-13", status: "Approved", user: "Elena Rodriguez" },
-    { id: "DOC-0024", name: "Internal_Policy_Update.docx", type: "Extraction", date: "2024-10-12", status: "Rejected", user: "System Oracle" },
-  ];
-};
+import { getAuthHeaders } from '@/lib/auth';
+import { API_URL, API_ORIGIN } from '@/lib/config';
 
-export const updateDocumentStatus = async (id, status) => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  console.log(`Updated document ${id} to status: ${status}`);
-  return { success: true };
-};
+export { API_URL, API_ORIGIN };
 
-export const editDocumentContent = async (id, content) => {
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  console.log(`Saved updated content for document ${id}`);
-  return { success: true };
-};
+export class ApiRequestError extends Error {
+  constructor(message, payload = {}) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.payload = payload;
+  }
+}
+
+export async function apiFetch(path, options = {}) {
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {})
+    }
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.success === false) {
+    throw new ApiRequestError(data.message || 'Request failed', data);
+  }
+
+  return data;
+}
+
+export async function fetchDashboardSummary() {
+  const data = await apiFetch('/dashboard/summary');
+  return data.summary;
+}
+
+export async function fetchDocuments({ search = '', status = '' } = {}) {
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const data = await apiFetch(`/documents${query}`);
+  return data.documents || [];
+}
+
+export async function trackDocument(query) {
+  const data = await apiFetch(`/documents/track/search?q=${encodeURIComponent(query)}`);
+  return {
+    result: data.result,
+    recent: data.recent || []
+  };
+}
+
+export async function updateDocumentStatus(id, action, payload = {}) {
+  return apiFetch(`/documents/${id}/${action}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function editDocumentContent(id, content) {
+  return updateDocumentStatus(id, 'approve', { data: content });
+}
+
+/** Saves draft fields and sets status to pending_admin for the admin queue. */
+export async function submitDocumentForReview(id, payload = {}) {
+  return apiFetch(`/documents/${id}/submit-for-review`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+}

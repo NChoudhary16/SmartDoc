@@ -23,6 +23,8 @@ const playfair = Playfair_Display({
   style: ["italic"],
 });
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export const metadata = {
   title: "SmartDoc-AI | AI Command Center",
   description: "SmartDoc-AI — Modern dashboard for AI-powered document automation and team insights.",
@@ -38,7 +40,9 @@ export default function RootLayout({ children }) {
         <div className="bg-layer-1"></div>
         <div className="bg-layer-2"></div>
         <div className="bg-layer-3"></div>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

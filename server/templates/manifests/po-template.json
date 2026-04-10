@@ -1,0 +1,9 @@
+{
+  "title": "Bulk Purchase Order",
+  "intro": "Auto-generated purchase order draft using extracted procurement data.",
+  "sections": [
+    { "heading": "PO Details", "fields": ["po_number", "date", "vendor_name", "department"] },
+    { "heading": "Delivery", "fields": ["shipping_address", "delivery_date", "contact_person"] },
+    { "heading": "Order Lines", "fields": ["items", "quantities", "total_price", "notes"] }
+  ]
+}

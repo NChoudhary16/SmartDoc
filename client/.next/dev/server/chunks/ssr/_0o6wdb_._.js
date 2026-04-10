@@ -130,51 +130,59 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pen$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/pen.js [app-ssr] (ecmascript) <export default as Edit2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$ellipsis$2d$vertical$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__MoreVertical$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/ellipsis-vertical.js [app-ssr] (ecmascript) <export default as MoreVertical>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$client$2f$lib$2f$auth$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/client/lib/auth.js [app-ssr] (ecmascript)");
 "use client";
 ;
 ;
 ;
 ;
-const DocumentTable = ({ onReview })=>{
-    const documents = [
-        {
-            id: "DOC-0021",
-            name: "Q4_Strategy_Automation.pdf",
-            type: "Automation",
-            date: "2024-10-14",
-            status: "Pending",
-            user: "Sarah Chen"
-        },
-        {
-            id: "DOC-0022",
-            name: "Market_Research_V2.docx",
-            type: "Extraction",
-            date: "2024-10-14",
-            status: "Reviewing",
-            user: "David Vance"
-        },
-        {
-            id: "DOC-0023",
-            name: "Finance_Report_Final.pdf",
-            type: "Automation",
-            date: "2024-10-13",
-            status: "Approved",
-            user: "Elena Rodriguez"
-        },
-        {
-            id: "DOC-0024",
-            name: "Internal_Policy_Update.docx",
-            type: "Extraction",
-            date: "2024-10-12",
-            status: "Rejected",
-            user: "System Oracle"
-        }
-    ];
+;
+const PAGE_SIZE = 5;
+const DocumentTable = ({ onReview, refreshKey = 0, searchQuery = '' })=>{
+    const [documents, setDocuments] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [page, setPage] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(1);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const loadPending = async ()=>{
+            try {
+                const response = await fetch('http://localhost:5000/api/documents/pending/list', {
+                    headers: (0, __TURBOPACK__imported__module__$5b$project$5d2f$client$2f$lib$2f$auth$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getAuthHeaders"])()
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setDocuments(data.documents || []);
+                }
+            } catch (error) {
+                console.error('Failed loading pending documents', error);
+            }
+        };
+        loadPending();
+    }, [
+        refreshKey
+    ]);
+    const filteredDocuments = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
+        const term = searchQuery.trim().toLowerCase();
+        if (!term) return documents;
+        return documents.filter((doc)=>{
+            const id = String(doc.id || '').toLowerCase();
+            const file = String(doc.original_file || '').toLowerCase();
+            const type = String(doc.document_type || '').toLowerCase();
+            const status = String(doc.status || '').toLowerCase();
+            return id.includes(term) || file.includes(term) || type.includes(term) || status.includes(term);
+        });
+    }, [
+        documents,
+        searchQuery
+    ]);
+    const totalPages = Math.max(1, Math.ceil(filteredDocuments.length / PAGE_SIZE));
+    const currentPage = Math.min(page, totalPages);
+    const pageStart = (currentPage - 1) * PAGE_SIZE;
+    const pagedDocuments = filteredDocuments.slice(pageStart, pageStart + PAGE_SIZE);
     const statusStyles = {
-        Pending: "bg-amber-100/50 text-amber-700 border-amber-200",
-        Reviewing: "bg-blue-100/50 text-blue-700 border-blue-200",
-        Approved: "bg-emerald-100/50 text-emerald-700 border-emerald-200",
-        Rejected: "bg-rose-100/50 text-rose-700 border-rose-200"
+        pending_admin: "bg-amber-100/50 text-amber-700 border-amber-200",
+        approved: "bg-emerald-100/50 text-emerald-700 border-emerald-200",
+        rejected: "bg-rose-100/50 text-rose-700 border-rose-200",
+        dispatched: "bg-blue-100/50 text-blue-700 border-blue-200",
+        flagged: "bg-orange-100/50 text-orange-700 border-orange-200"
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "glass-panel rounded-3xl overflow-hidden border-slate-200/60 shadow-xl shadow-slate-200/20",
@@ -191,7 +199,7 @@ const DocumentTable = ({ onReview })=>{
                                     children: "ID"
                                 }, void 0, false, {
                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                    lineNumber: 27,
+                                    lineNumber: 62,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -199,7 +207,7 @@ const DocumentTable = ({ onReview })=>{
                                     children: "Document"
                                 }, void 0, false, {
                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                    lineNumber: 28,
+                                    lineNumber: 63,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -207,7 +215,7 @@ const DocumentTable = ({ onReview })=>{
                                     children: "Owner"
                                 }, void 0, false, {
                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                    lineNumber: 29,
+                                    lineNumber: 64,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -215,7 +223,7 @@ const DocumentTable = ({ onReview })=>{
                                     children: "Type"
                                 }, void 0, false, {
                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                    lineNumber: 30,
+                                    lineNumber: 65,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -223,7 +231,7 @@ const DocumentTable = ({ onReview })=>{
                                     children: "Status"
                                 }, void 0, false, {
                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                    lineNumber: 31,
+                                    lineNumber: 66,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -231,23 +239,23 @@ const DocumentTable = ({ onReview })=>{
                                     children: "Actions"
                                 }, void 0, false, {
                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                    lineNumber: 32,
+                                    lineNumber: 67,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                            lineNumber: 26,
+                            lineNumber: 61,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                        lineNumber: 25,
+                        lineNumber: 60,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
                         className: "divide-y divide-slate-100",
-                        children: documents.map((doc, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].tr, {
+                        children: pagedDocuments.map((doc, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].tr, {
                                 initial: {
                                     opacity: 0,
                                     x: -10
@@ -263,10 +271,10 @@ const DocumentTable = ({ onReview })=>{
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                         className: "px-6 py-4 text-xs font-bold text-indigo-600 font-sans",
-                                        children: doc.id
+                                        children: String(doc.id).slice(0, 8)
                                     }, void 0, false, {
                                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                        lineNumber: 44,
+                                        lineNumber: 79,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -276,70 +284,70 @@ const DocumentTable = ({ onReview })=>{
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors",
-                                                    children: doc.name
+                                                    children: doc.original_file
                                                 }, void 0, false, {
                                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                                    lineNumber: 47,
+                                                    lineNumber: 82,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "text-[10px] text-slate-400 font-medium font-sans",
                                                     children: [
-                                                        "Generated on ",
-                                                        doc.date
+                                                        "Created ",
+                                                        new Date(doc.created_at).toLocaleDateString()
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                                    lineNumber: 48,
+                                                    lineNumber: 83,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                            lineNumber: 46,
+                                            lineNumber: 81,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                        lineNumber: 45,
+                                        lineNumber: 80,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                         className: "px-6 py-4 text-sm text-slate-600 font-medium",
-                                        children: doc.user
+                                        children: doc.created_by || 'System'
                                     }, void 0, false, {
                                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                        lineNumber: 51,
+                                        lineNumber: 86,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                         className: "px-6 py-4",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             className: "px-2 py-1 bg-slate-100 border border-slate-200 rounded text-[10px] font-black text-slate-500 uppercase tracking-tight",
-                                            children: doc.type
+                                            children: doc.document_type || 'General'
                                         }, void 0, false, {
                                             fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                            lineNumber: 53,
+                                            lineNumber: 88,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                        lineNumber: 52,
+                                        lineNumber: 87,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                         className: "px-6 py-4",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            className: `px-3 py-1 border rounded-lg text-[10px] font-black uppercase tracking-wider ${statusStyles[doc.status]}`,
+                                            className: `px-3 py-1 border rounded-lg text-[10px] font-black uppercase tracking-wider ${statusStyles[doc.status] || "bg-slate-100 text-slate-600 border-slate-200"}`,
                                             children: doc.status
                                         }, void 0, false, {
                                             fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                            lineNumber: 58,
+                                            lineNumber: 93,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                        lineNumber: 57,
+                                        lineNumber: 92,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -354,12 +362,12 @@ const DocumentTable = ({ onReview })=>{
                                                         size: 16
                                                     }, void 0, false, {
                                                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                                        lineNumber: 68,
+                                                        lineNumber: 103,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                                    lineNumber: 64,
+                                                    lineNumber: 99,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -368,40 +376,40 @@ const DocumentTable = ({ onReview })=>{
                                                         size: 16
                                                     }, void 0, false, {
                                                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                                        lineNumber: 71,
+                                                        lineNumber: 106,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                                    lineNumber: 70,
+                                                    lineNumber: 105,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                            lineNumber: 63,
+                                            lineNumber: 98,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                        lineNumber: 62,
+                                        lineNumber: 97,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, doc.id, true, {
                                 fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                lineNumber: 37,
+                                lineNumber: 72,
                                 columnNumber: 13
                             }, ("TURBOPACK compile-time value", void 0)))
                     }, void 0, false, {
                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                        lineNumber: 35,
+                        lineNumber: 70,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                lineNumber: 24,
+                lineNumber: 59,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -409,47 +417,57 @@ const DocumentTable = ({ onReview })=>{
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "text-2xs uppercase tracking-widest font-black text-slate-400",
-                        children: "Showing 4 of 42 results"
-                    }, void 0, false, {
+                        children: [
+                            "Showing ",
+                            pagedDocuments.length,
+                            " of ",
+                            filteredDocuments.length,
+                            " results"
+                        ]
+                    }, void 0, true, {
                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                        lineNumber: 80,
+                        lineNumber: 115,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex items-center gap-2",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                className: "px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors shadow-sm",
+                                onClick: ()=>setPage((p)=>Math.max(1, p - 1)),
+                                disabled: currentPage === 1,
+                                className: "px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors shadow-sm disabled:opacity-50 disabled:hover:text-slate-500",
                                 children: "Previous"
                             }, void 0, false, {
                                 fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                lineNumber: 82,
+                                lineNumber: 119,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                className: "px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors shadow-sm",
+                                onClick: ()=>setPage((p)=>Math.min(totalPages, p + 1)),
+                                disabled: currentPage >= totalPages,
+                                className: "px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors shadow-sm disabled:opacity-50 disabled:hover:text-slate-500",
                                 children: "Next"
                             }, void 0, false, {
                                 fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                                lineNumber: 83,
+                                lineNumber: 126,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                        lineNumber: 81,
+                        lineNumber: 118,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-                lineNumber: 79,
+                lineNumber: 114,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/client/components/Admin/DocumentTable.jsx",
-        lineNumber: 23,
+        lineNumber: 58,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -472,17 +490,123 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/file-text.js [app-ssr] (ecmascript) <export default as FileText>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-right.js [app-ssr] (ecmascript) <export default as ChevronRight>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pen$2d$line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit3$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/pen-line.js [app-ssr] (ecmascript) <export default as Edit3>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$client$2f$lib$2f$auth$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/client/lib/auth.js [app-ssr] (ecmascript)");
 "use client";
 ;
 ;
 ;
 ;
-const DocumentReviewModal = ({ isOpen, document, onClose })=>{
-    const [content, setContent] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("Automated synthesis of the 'Q4 Strategy' document suggests merging conflicting feedback threads from stakeholders. The current document identifies three main bottlenecks in the approval chain: legal review latency, creative asset availability, and budget reconciliation inconsistencies...");
+;
+const DocumentReviewModal = ({ isOpen, document, onClose, onActionComplete })=>{
+    const [content, setContent] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('{}');
+    const [docData, setDocData] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [busy, setBusy] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const loadDoc = async ()=>{
+            if (!document?.id || !isOpen) return;
+            try {
+                const response = await fetch(`http://localhost:5000/api/documents/${document.id}`, {
+                    headers: (0, __TURBOPACK__imported__module__$5b$project$5d2f$client$2f$lib$2f$auth$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getAuthHeaders"])()
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setDocData(data.document);
+                    setContent(JSON.stringify(data.document.extracted_json || {}, null, 2));
+                }
+            } catch (error) {
+                console.error('Unable to load document details', error);
+            }
+        };
+        loadDoc();
+    }, [
+        document?.id,
+        isOpen
+    ]);
+    const handleApprove = async ()=>{
+        if (!document?.id) return;
+        setBusy(true);
+        try {
+            const parsed = JSON.parse(content || '{}');
+            const response = await fetch(`http://localhost:5000/api/documents/${document.id}/approve`, {
+                method: 'POST',
+                headers: (0, __TURBOPACK__imported__module__$5b$project$5d2f$client$2f$lib$2f$auth$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getAuthHeaders"])(),
+                body: JSON.stringify({
+                    data: parsed,
+                    templateName: docData?.template_name,
+                    department: docData?.department || parsed.department || 'operations'
+                })
+            });
+            const data = await response.json();
+            if (!data.success) {
+                alert(data.message || 'Approval failed');
+                return;
+            }
+            alert('Document approved and dispatched.');
+            onActionComplete?.();
+            onClose();
+        } catch (error) {
+            console.error(error);
+            alert('Approval failed');
+        } finally{
+            setBusy(false);
+        }
+    };
+    const handleReject = async ()=>{
+        if (!document?.id) return;
+        setBusy(true);
+        try {
+            const response = await fetch(`http://localhost:5000/api/documents/${document.id}/reject`, {
+                method: 'POST',
+                headers: (0, __TURBOPACK__imported__module__$5b$project$5d2f$client$2f$lib$2f$auth$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getAuthHeaders"])(),
+                body: JSON.stringify({
+                    comment: 'Rejected by admin during review'
+                })
+            });
+            const data = await response.json();
+            if (!data.success) {
+                alert(data.message || 'Reject failed');
+                return;
+            }
+            alert('Document rejected.');
+            onActionComplete?.();
+            onClose();
+        } catch (error) {
+            console.error(error);
+            alert('Reject failed');
+        } finally{
+            setBusy(false);
+        }
+    };
+    const handleFlag = async ()=>{
+        if (!document?.id) return;
+        setBusy(true);
+        try {
+            const response = await fetch(`http://localhost:5000/api/documents/${document.id}/flag`, {
+                method: 'POST',
+                headers: (0, __TURBOPACK__imported__module__$5b$project$5d2f$client$2f$lib$2f$auth$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getAuthHeaders"])(),
+                body: JSON.stringify({
+                    comment: 'Flagged by admin for manual corrections'
+                })
+            });
+            const data = await response.json();
+            if (!data.success) {
+                alert(data.message || 'Flag failed');
+                return;
+            }
+            alert('Document flagged.');
+            onActionComplete?.();
+            onClose();
+        } catch (error) {
+            console.error(error);
+            alert('Flag failed');
+        } finally{
+            setBusy(false);
+        }
+    };
     if (!isOpen) return null;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AnimatePresence"], {
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-            className: "fixed inset-0 z-[100] flex items-center justify-end",
+            className: "fixed inset-0 z-100 flex items-center justify-end",
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
                     initial: {
@@ -498,7 +622,7 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                     className: "absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
                 }, void 0, false, {
                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                    lineNumber: 18,
+                    lineNumber: 122,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
@@ -530,55 +654,55 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                                                 size: 20
                                             }, void 0, false, {
                                                 fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                lineNumber: 38,
+                                                lineNumber: 142,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                            lineNumber: 37,
+                                            lineNumber: 141,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                                                     className: "text-lg font-bold text-slate-900",
-                                                    children: document?.name || "Review Document"
+                                                    children: docData?.original_file || "Review Document"
                                                 }, void 0, false, {
                                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                    lineNumber: 41,
+                                                    lineNumber: 145,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "text-xs font-semibold text-slate-500 uppercase tracking-widest font-sans flex items-center gap-2",
                                                     children: [
                                                         "ID: ",
-                                                        document?.id,
+                                                        String(document?.id || '').slice(0, 8),
                                                         " ",
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
                                                             size: 12
                                                         }, void 0, false, {
                                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                            lineNumber: 43,
-                                                            columnNumber: 38
+                                                            lineNumber: 147,
+                                                            columnNumber: 64
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         " Status: ",
-                                                        document?.status
+                                                        docData?.status || document?.status
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                    lineNumber: 42,
+                                                    lineNumber: 146,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                            lineNumber: 40,
+                                            lineNumber: 144,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                    lineNumber: 36,
+                                    lineNumber: 140,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -588,18 +712,18 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                                         size: 24
                                     }, void 0, false, {
                                         fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                        lineNumber: 48,
+                                        lineNumber: 152,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                    lineNumber: 47,
+                                    lineNumber: 151,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                            lineNumber: 35,
+                            lineNumber: 139,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -612,7 +736,7 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                                             children: "Automated Output Preview"
                                         }, void 0, false, {
                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                            lineNumber: 55,
+                                            lineNumber: 159,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -624,18 +748,18 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                                                 placeholder: "Review and edit the automated content here..."
                                             }, void 0, false, {
                                                 fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                lineNumber: 57,
+                                                lineNumber: 161,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                            lineNumber: 56,
+                                            lineNumber: 160,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                    lineNumber: 54,
+                                    lineNumber: 158,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -649,7 +773,7 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                                                     children: "Confidence Score"
                                                 }, void 0, false, {
                                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                    lineNumber: 68,
+                                                    lineNumber: 172,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -662,37 +786,40 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                                                                     width: 0
                                                                 },
                                                                 animate: {
-                                                                    width: '94%'
+                                                                    width: `${Math.round((docData?.verification_report?.confidence || 0) * 100)}%`
                                                                 },
                                                                 className: "h-full bg-emerald-500"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                                lineNumber: 71,
+                                                                lineNumber: 175,
                                                                 columnNumber: 21
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         }, void 0, false, {
                                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                            lineNumber: 70,
+                                                            lineNumber: 174,
                                                             columnNumber: 19
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "text-sm font-black text-slate-900",
-                                                            children: "94%"
-                                                        }, void 0, false, {
+                                                            children: [
+                                                                Math.round((docData?.verification_report?.confidence || 0) * 100),
+                                                                "%"
+                                                            ]
+                                                        }, void 0, true, {
                                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                            lineNumber: 73,
+                                                            lineNumber: 177,
                                                             columnNumber: 19
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                    lineNumber: 69,
+                                                    lineNumber: 173,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                            lineNumber: 67,
+                                            lineNumber: 171,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -703,7 +830,7 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                                                     children: "Processing Model"
                                                 }, void 0, false, {
                                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                    lineNumber: 77,
+                                                    lineNumber: 181,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -714,32 +841,32 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                                                             className: "text-indigo-600"
                                                         }, void 0, false, {
                                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                            lineNumber: 79,
+                                                            lineNumber: 183,
                                                             columnNumber: 19
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         " SmartDoc-AI v2"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                    lineNumber: 78,
+                                                    lineNumber: 182,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                            lineNumber: 76,
+                                            lineNumber: 180,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                    lineNumber: 66,
+                                    lineNumber: 170,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                            lineNumber: 53,
+                            lineNumber: 157,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -749,83 +876,90 @@ const DocumentReviewModal = ({ isOpen, document, onClose })=>{
                                     className: "flex gap-2",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                            className: "flex-1 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2",
+                                            onClick: handleReject,
+                                            disabled: busy,
+                                            className: "flex-1 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
                                                     size: 16
                                                 }, void 0, false, {
                                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                    lineNumber: 89,
+                                                    lineNumber: 193,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 " Reject"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                            lineNumber: 88,
+                                            lineNumber: 192,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                            className: "flex-1 px-4 py-3 rounded-xl border border-rose-200 text-rose-600 font-bold text-sm hover:bg-rose-50 transition-colors flex items-center justify-center gap-2",
+                                            onClick: handleFlag,
+                                            disabled: busy,
+                                            className: "flex-1 px-4 py-3 rounded-xl border border-rose-200 text-rose-600 font-bold text-sm hover:bg-rose-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pen$2d$line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit3$3e$__["Edit3"], {
                                                     size: 16
                                                 }, void 0, false, {
                                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                                    lineNumber: 92,
+                                                    lineNumber: 196,
                                                     columnNumber: 17
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 " Flag"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                            lineNumber: 91,
+                                            lineNumber: 195,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                    lineNumber: 87,
+                                    lineNumber: 191,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                    className: "liquid-gradient text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all",
+                                    onClick: handleApprove,
+                                    disabled: busy,
+                                    className: "liquid-gradient text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Check$3e$__["Check"], {
                                             size: 18
                                         }, void 0, false, {
                                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                            lineNumber: 96,
+                                            lineNumber: 200,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
-                                        " Approve & Finalize"
+                                        " ",
+                                        busy ? 'Processing...' : 'Approve & Finalize'
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                                    lineNumber: 95,
+                                    lineNumber: 199,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                            lineNumber: 86,
+                            lineNumber: 190,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-                    lineNumber: 27,
+                    lineNumber: 131,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-            lineNumber: 16,
+            lineNumber: 120,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/client/components/Admin/DocumentReviewModal.jsx",
-        lineNumber: 15,
+        lineNumber: 119,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -847,7 +981,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$client$2f$components$2f$Admi
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$funnel$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Filter$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/funnel.js [app-ssr] (ecmascript) <export default as Filter>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/search.js [app-ssr] (ecmascript) <export default as Search>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$cloud$2d$download$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__DownloadCloud$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/cloud-download.js [app-ssr] (ecmascript) <export default as DownloadCloud>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$client$2f$components$2f$ProtectedRoute$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/client/components/ProtectedRoute.jsx [app-ssr] (ecmascript)");
 "use client";
+;
 ;
 ;
 ;
@@ -858,215 +994,234 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 function AdminPage() {
     const [selectedDoc, setSelectedDoc] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [isModalOpen, setIsModalOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [refreshKey, setRefreshKey] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(0);
+    const [searchQuery, setSearchQuery] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
     const handleReview = (doc)=>{
         setSelectedDoc(doc);
         setIsModalOpen(true);
     };
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "flex flex-col",
-        children: [
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].header, {
-                initial: {
-                    y: 20,
-                    opacity: 0
-                },
-                animate: {
-                    y: 0,
-                    opacity: 1
-                },
-                transition: {
-                    duration: 0.8,
-                    delay: 0.1,
-                    ease: "easeOut"
-                },
-                className: "mb-8 flex items-end justify-between",
-                children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "flex items-center gap-2 mb-3",
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                        className: "font-sans text-[10px] text-indigo-600 font-bold tracking-[0.3em] uppercase",
-                                        children: "Document Admin"
-                                    }, void 0, false, {
-                                        fileName: "[project]/client/app/admin/page.jsx",
-                                        lineNumber: 30,
-                                        columnNumber: 13
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "h-px w-24 bg-gradient-to-r from-indigo-300 to-transparent"
-                                    }, void 0, false, {
-                                        fileName: "[project]/client/app/admin/page.jsx",
-                                        lineNumber: 31,
-                                        columnNumber: 13
-                                    }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/client/app/admin/page.jsx",
-                                lineNumber: 29,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                                className: "font-body text-4xl font-extrabold tracking-tight text-slate-900 leading-tight",
-                                children: [
-                                    "Review ",
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                        className: "font-display italic font-medium text-indigo-600",
-                                        children: "Center"
-                                    }, void 0, false, {
-                                        fileName: "[project]/client/app/admin/page.jsx",
-                                        lineNumber: 34,
-                                        columnNumber: 20
-                                    }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/client/app/admin/page.jsx",
-                                lineNumber: 33,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/client/app/admin/page.jsx",
-                        lineNumber: 28,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "flex gap-3 pb-1",
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                className: "px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm",
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$funnel$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Filter$3e$__["Filter"], {
-                                        size: 16
-                                    }, void 0, false, {
-                                        fileName: "[project]/client/app/admin/page.jsx",
-                                        lineNumber: 40,
-                                        columnNumber: 13
-                                    }, this),
-                                    " Filter"
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/client/app/admin/page.jsx",
-                                lineNumber: 39,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                className: "liquid-gradient text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2",
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$cloud$2d$download$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__DownloadCloud$3e$__["DownloadCloud"], {
-                                        size: 16
-                                    }, void 0, false, {
-                                        fileName: "[project]/client/app/admin/page.jsx",
-                                        lineNumber: 43,
-                                        columnNumber: 13
-                                    }, this),
-                                    " Export CSV"
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/client/app/admin/page.jsx",
-                                lineNumber: 42,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/client/app/admin/page.jsx",
-                        lineNumber: 38,
-                        columnNumber: 9
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/client/app/admin/page.jsx",
-                lineNumber: 22,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$client$2f$components$2f$Admin$2f$AdminStats$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
-                fileName: "[project]/client/app/admin/page.jsx",
-                lineNumber: 49,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
-                className: "relative",
-                children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "flex items-center justify-between mb-6 px-2",
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                                className: "font-body text-xl font-bold text-slate-900 flex items-center gap-3",
-                                children: [
-                                    "Processing Queue ",
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                        className: "px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] rounded-full font-black border border-indigo-100 uppercase tracking-widest",
-                                        children: "42 Total"
-                                    }, void 0, false, {
-                                        fileName: "[project]/client/app/admin/page.jsx",
-                                        lineNumber: 55,
-                                        columnNumber: 30
-                                    }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/client/app/admin/page.jsx",
-                                lineNumber: 54,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "relative",
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__["Search"], {
-                                        className: "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400",
-                                        size: 14
-                                    }, void 0, false, {
-                                        fileName: "[project]/client/app/admin/page.jsx",
-                                        lineNumber: 58,
-                                        columnNumber: 13
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                        type: "text",
-                                        placeholder: "Search ID, document name...",
-                                        className: "pl-9 pr-4 py-2 bg-slate-100/50 border-none focus:ring-1 focus:ring-indigo-500/20 rounded-xl text-xs font-medium w-64 placeholder:text-slate-400"
-                                    }, void 0, false, {
-                                        fileName: "[project]/client/app/admin/page.jsx",
-                                        lineNumber: 59,
-                                        columnNumber: 13
-                                    }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/client/app/admin/page.jsx",
-                                lineNumber: 57,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/client/app/admin/page.jsx",
-                        lineNumber: 53,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$client$2f$components$2f$Admin$2f$DocumentTable$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                        onReview: handleReview
-                    }, void 0, false, {
-                        fileName: "[project]/client/app/admin/page.jsx",
-                        lineNumber: 67,
-                        columnNumber: 9
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/client/app/admin/page.jsx",
-                lineNumber: 52,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$client$2f$components$2f$Admin$2f$DocumentReviewModal$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                isOpen: isModalOpen,
-                document: selectedDoc,
-                onClose: ()=>setIsModalOpen(false)
-            }, void 0, false, {
-                fileName: "[project]/client/app/admin/page.jsx",
-                lineNumber: 71,
-                columnNumber: 7
-            }, this)
-        ]
-    }, void 0, true, {
+    const handleActionComplete = ()=>{
+        setRefreshKey((k)=>k + 1);
+    };
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$client$2f$components$2f$ProtectedRoute$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+        allowedRoles: [
+            'admin'
+        ],
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "flex flex-col",
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].header, {
+                    initial: {
+                        y: 20,
+                        opacity: 0
+                    },
+                    animate: {
+                        y: 0,
+                        opacity: 1
+                    },
+                    transition: {
+                        duration: 0.8,
+                        delay: 0.1,
+                        ease: "easeOut"
+                    },
+                    className: "mb-8 flex items-end justify-between",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center gap-2 mb-3",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "font-sans text-[10px] text-indigo-600 font-bold tracking-[0.3em] uppercase",
+                                            children: "Document Admin"
+                                        }, void 0, false, {
+                                            fileName: "[project]/client/app/admin/page.jsx",
+                                            lineNumber: 38,
+                                            columnNumber: 13
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "h-px w-24 bg-linear-to-r from-indigo-300 to-transparent"
+                                        }, void 0, false, {
+                                            fileName: "[project]/client/app/admin/page.jsx",
+                                            lineNumber: 39,
+                                            columnNumber: 13
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/client/app/admin/page.jsx",
+                                    lineNumber: 37,
+                                    columnNumber: 11
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
+                                    className: "font-body text-4xl font-extrabold tracking-tight text-slate-900 leading-tight",
+                                    children: [
+                                        "Review ",
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "font-display italic font-medium text-indigo-600",
+                                            children: "Center"
+                                        }, void 0, false, {
+                                            fileName: "[project]/client/app/admin/page.jsx",
+                                            lineNumber: 42,
+                                            columnNumber: 20
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/client/app/admin/page.jsx",
+                                    lineNumber: 41,
+                                    columnNumber: 11
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/client/app/admin/page.jsx",
+                            lineNumber: 36,
+                            columnNumber: 9
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex gap-3 pb-1",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    className: "px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$funnel$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Filter$3e$__["Filter"], {
+                                            size: 16
+                                        }, void 0, false, {
+                                            fileName: "[project]/client/app/admin/page.jsx",
+                                            lineNumber: 48,
+                                            columnNumber: 13
+                                        }, this),
+                                        " Filter"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/client/app/admin/page.jsx",
+                                    lineNumber: 47,
+                                    columnNumber: 11
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    className: "liquid-gradient text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$cloud$2d$download$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__DownloadCloud$3e$__["DownloadCloud"], {
+                                            size: 16
+                                        }, void 0, false, {
+                                            fileName: "[project]/client/app/admin/page.jsx",
+                                            lineNumber: 51,
+                                            columnNumber: 13
+                                        }, this),
+                                        " Export CSV"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/client/app/admin/page.jsx",
+                                    lineNumber: 50,
+                                    columnNumber: 11
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/client/app/admin/page.jsx",
+                            lineNumber: 46,
+                            columnNumber: 9
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/client/app/admin/page.jsx",
+                    lineNumber: 30,
+                    columnNumber: 7
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$client$2f$components$2f$Admin$2f$AdminStats$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
+                    fileName: "[project]/client/app/admin/page.jsx",
+                    lineNumber: 57,
+                    columnNumber: 7
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
+                    className: "relative",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex items-center justify-between mb-6 px-2",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                    className: "font-body text-xl font-bold text-slate-900 flex items-center gap-3",
+                                    children: [
+                                        "Processing Queue ",
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] rounded-full font-black border border-indigo-100 uppercase tracking-widest",
+                                            children: "42 Total"
+                                        }, void 0, false, {
+                                            fileName: "[project]/client/app/admin/page.jsx",
+                                            lineNumber: 63,
+                                            columnNumber: 30
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/client/app/admin/page.jsx",
+                                    lineNumber: 62,
+                                    columnNumber: 11
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "relative",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__["Search"], {
+                                            className: "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400",
+                                            size: 14
+                                        }, void 0, false, {
+                                            fileName: "[project]/client/app/admin/page.jsx",
+                                            lineNumber: 66,
+                                            columnNumber: 13
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                            type: "text",
+                                            placeholder: "Search ID, document name...",
+                                            value: searchQuery,
+                                            onChange: (e)=>setSearchQuery(e.target.value),
+                                            className: "pl-9 pr-4 py-2 bg-slate-100/50 border-none focus:ring-1 focus:ring-indigo-500/20 rounded-xl text-xs font-medium w-64 placeholder:text-slate-400"
+                                        }, void 0, false, {
+                                            fileName: "[project]/client/app/admin/page.jsx",
+                                            lineNumber: 67,
+                                            columnNumber: 13
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/client/app/admin/page.jsx",
+                                    lineNumber: 65,
+                                    columnNumber: 11
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/client/app/admin/page.jsx",
+                            lineNumber: 61,
+                            columnNumber: 9
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$client$2f$components$2f$Admin$2f$DocumentTable$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+                            onReview: handleReview,
+                            refreshKey: refreshKey,
+                            searchQuery: searchQuery
+                        }, void 0, false, {
+                            fileName: "[project]/client/app/admin/page.jsx",
+                            lineNumber: 77,
+                            columnNumber: 9
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/client/app/admin/page.jsx",
+                    lineNumber: 60,
+                    columnNumber: 7
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$client$2f$components$2f$Admin$2f$DocumentReviewModal$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+                    isOpen: isModalOpen,
+                    document: selectedDoc,
+                    onActionComplete: handleActionComplete,
+                    onClose: ()=>setIsModalOpen(false)
+                }, void 0, false, {
+                    fileName: "[project]/client/app/admin/page.jsx",
+                    lineNumber: 81,
+                    columnNumber: 7
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/client/app/admin/page.jsx",
+            lineNumber: 28,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
         fileName: "[project]/client/app/admin/page.jsx",
-        lineNumber: 20,
+        lineNumber: 27,
         columnNumber: 5
     }, this);
 }

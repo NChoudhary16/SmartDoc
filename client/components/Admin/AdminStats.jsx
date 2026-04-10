@@ -1,15 +1,39 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { fetchDashboardSummary } from '@/lib/api';
 
 const AdminStats = () => {
+  const [totals, setTotals] = useState({
+    total_documents: 0,
+    pending_review: 0,
+    approved_today: 0,
+    rejected: 0
+  });
+
+  useEffect(() => {
+    let active = true;
+    fetchDashboardSummary()
+      .then((summary) => {
+        if (active && summary?.totals) {
+          setTotals(summary.totals);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load dashboard summary', error);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const stats = [
-    { label: "Total Documents", value: "1,284", icon: FileText, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Pending Review", value: "42", icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Approved today", value: "18", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Rejected", value: "3", icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-50" },
+    { label: "Total Documents", value: totals.total_documents, icon: FileText, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: "Pending Review", value: totals.pending_review, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "Approved today", value: totals.approved_today, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Rejected", value: totals.rejected, icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-50" },
   ];
 
   return (

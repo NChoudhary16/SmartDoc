@@ -1,0 +1,9 @@
+{
+  "title": "Standard Invoice",
+  "intro": "Auto-generated invoice draft based on extracted billing data.",
+  "sections": [
+    { "heading": "Invoice Details", "fields": ["invoice_number", "date", "vendor_name", "currency"] },
+    { "heading": "Billing", "fields": ["bill_to", "shipping_address", "total_amount", "tax_amount"] },
+    { "heading": "Items", "fields": ["line_items", "notes"] }
+  ]
+}

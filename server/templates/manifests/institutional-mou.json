@@ -1,0 +1,9 @@
+{
+  "title": "Institutional Memorandum of Understanding",
+  "intro": "Auto-generated draft MOU aligned with institutional formatting requirements.",
+  "sections": [
+    { "heading": "Parties", "fields": ["party_one", "party_two", "effective_date"] },
+    { "heading": "Purpose", "fields": ["purpose", "scope", "program_name"] },
+    { "heading": "Obligations", "fields": ["obligations", "key_clauses", "termination_clause"] }
+  ]
+}

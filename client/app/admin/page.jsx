@@ -6,18 +6,27 @@ import AdminStats from '@/components/Admin/AdminStats';
 import DocumentTable from '@/components/Admin/DocumentTable';
 import DocumentReviewModal from '@/components/Admin/DocumentReviewModal';
 import { Filter, Search, DownloadCloud } from 'lucide-react';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function AdminPage() {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
 
   const handleReview = (doc) => {
     setSelectedDoc(doc);
     setIsModalOpen(true);
   };
 
+  const handleActionComplete = () => {
+    setRefreshKey((k) => k + 1);
+  };
+
   return (
-    <div className="flex flex-col">
+    <ProtectedRoute allowedRoles={['admin']}>
+      <div className="flex flex-col">
       {/* Admin Title Section */}
       <motion.header 
         initial={{ y: 20, opacity: 0 }}
@@ -28,7 +37,7 @@ export default function AdminPage() {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <span className="font-sans text-[10px] text-indigo-600 font-bold tracking-[0.3em] uppercase">Document Admin</span>
-            <div className="h-px w-24 bg-gradient-to-r from-indigo-300 to-transparent"></div>
+            <div className="h-px w-24 bg-linear-to-r from-indigo-300 to-transparent"></div>
           </div>
           <h1 className="font-body text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
             Review <span className="font-display italic font-medium text-indigo-600">Center</span>
@@ -52,27 +61,39 @@ export default function AdminPage() {
       <section className="relative">
         <div className="flex items-center justify-between mb-6 px-2">
           <h2 className="font-body text-xl font-bold text-slate-900 flex items-center gap-3">
-            Processing Queue <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] rounded-full font-black border border-indigo-100 uppercase tracking-widest">42 Total</span>
+            Processing Queue{' '}
+            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] rounded-full font-black border border-indigo-100 uppercase tracking-widest">
+              {pendingCount} pending
+            </span>
           </h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input 
               type="text" 
               placeholder="Search ID, document name..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 pr-4 py-2 bg-slate-100/50 border-none focus:ring-1 focus:ring-indigo-500/20 rounded-xl text-xs font-medium w-64 placeholder:text-slate-400"
             />
           </div>
         </div>
         
-        <DocumentTable onReview={handleReview} />
+        <DocumentTable
+          onReview={handleReview}
+          refreshKey={refreshKey}
+          searchQuery={searchQuery}
+          onQueueCount={setPendingCount}
+        />
       </section>
 
       {/* Review Modal */}
       <DocumentReviewModal 
         isOpen={isModalOpen} 
         document={selectedDoc} 
+        onActionComplete={handleActionComplete}
         onClose={() => setIsModalOpen(false)} 
       />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }
