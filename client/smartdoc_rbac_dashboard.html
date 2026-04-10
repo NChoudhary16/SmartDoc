@@ -1,0 +1,371 @@
+
+<h2 class="sr-only">SmartDoc-AI RBAC Dashboard with Guest, Employee, and Admin roles</h2>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); }
+  .app { display: flex; height: 680px; background: var(--color-background-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; border: 0.5px solid var(--color-border-tertiary); }
+  .sidebar { width: 220px; background: var(--color-background-primary); border-right: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
+  .logo { padding: 0 20px 20px; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 12px; }
+  .logo-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .logo-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: var(--color-text-secondary); cursor: pointer; transition: background 0.15s; border-radius: 0; }
+  .nav-item:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .nav-item.active { background: var(--color-background-info); color: var(--color-text-info); font-weight: 500; }
+  .nav-item.locked { opacity: 0.4; cursor: not-allowed; }
+  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
+  .lock-badge { margin-left: auto; font-size: 10px; background: var(--color-background-secondary); color: var(--color-text-tertiary); padding: 1px 6px; border-radius: 8px; border: 0.5px solid var(--color-border-tertiary); }
+  .role-switcher { margin: auto 20px 0; }
+  .role-label { font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .role-btns { display: flex; gap: 4px; }
+  .role-btn { flex: 1; padding: 6px 4px; font-size: 11px; font-weight: 500; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-secondary); border-radius: var(--border-radius-md); cursor: pointer; transition: all 0.15s; }
+  .role-btn:hover { background: var(--color-background-secondary); }
+  .role-btn.active-guest { background: #E6F1FB; color: #0C447C; border-color: #85B7EB; }
+  .role-btn.active-employee { background: #EAF3DE; color: #27500A; border-color: #97C459; }
+  .role-btn.active-admin { background: #EEEDFE; color: #3C3489; border-color: #AFA9EC; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .role-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .pill-guest { background: #E6F1FB; color: #185FA5; }
+  .pill-employee { background: #EAF3DE; color: #3B6D11; }
+  .pill-admin { background: #EEEDFE; color: #534AB7; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+  .avatar-g { background: #E6F1FB; color: #185FA5; }
+  .avatar-e { background: #EAF3DE; color: #3B6D11; }
+  .avatar-a { background: #EEEDFE; color: #534AB7; }
+  .notif-btn { width: 30px; height: 30px; border-radius: 50%; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; }
+  .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; }
+  .stat-icon { width: 32px; height: 32px; border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; font-size: 15px; margin-bottom: 10px; }
+  .stat-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .stat-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-blurred { filter: blur(5px); user-select: none; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .section-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .section-action { font-size: 12px; color: var(--color-text-info); cursor: pointer; border: none; background: none; font-family: var(--font-sans); }
+  .table-wrap { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-secondary); padding: 10px 16px; text-align: left; background: var(--color-background-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); }
+  td { font-size: 12px; color: var(--color-text-primary); padding: 10px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--color-background-secondary); }
+  .status-pill { font-size: 10px; padding: 2px 8px; border-radius: 12px; font-weight: 500; display: inline-block; }
+  .s-pending { background: #FAEEDA; color: #854F0B; }
+  .s-approved { background: #EAF3DE; color: #3B6D11; }
+  .s-rejected { background: #FCEBEB; color: #A32D2D; }
+  .s-reviewing { background: #E6F1FB; color: #185FA5; }
+  .action-btn { font-size: 11px; padding: 4px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; font-family: var(--font-sans); }
+  .action-btn:hover { background: var(--color-background-secondary); }
+  .action-btn.approve { background: #EAF3DE; color: #3B6D11; border-color: #97C459; }
+  .action-btn.reject { background: #FCEBEB; color: #A32D2D; border-color: #F09595; }
+  .action-btn.disabled { opacity: 0.3; cursor: not-allowed; }
+  .access-denied { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 24px; text-align: center; margin-bottom: 20px; }
+  .denied-icon { font-size: 28px; margin-bottom: 8px; }
+  .denied-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+  .denied-sub { font-size: 12px; color: var(--color-text-secondary); }
+  .perm-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .perm-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px; }
+  .perm-role { font-size: 11px; font-weight: 500; margin-bottom: 10px; padding: 3px 10px; border-radius: 12px; display: inline-block; }
+  .perm-list { list-style: none; }
+  .perm-list li { font-size: 12px; color: var(--color-text-secondary); padding: 4px 0; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; gap: 6px; }
+  .perm-list li:last-child { border-bottom: none; }
+  .check { color: #3B6D11; }
+  .cross { color: #A32D2D; }
+  .user-table-wrap { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .insight-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; margin-bottom: 20px; }
+  .insight-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .insight-tag { font-size: 10px; background: #EEEDFE; color: #534AB7; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .insight-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+  .insight-body { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+</style>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-title">SmartDoc-AI</div>
+      <div class="logo-sub">AI Command Center</div>
+    </div>
+    <div id="nav-links"></div>
+    <div class="role-switcher">
+      <div class="role-label">Switch role (demo)</div>
+      <div class="role-btns">
+        <button class="role-btn active-guest" onclick="setRole('guest')">Guest</button>
+        <button class="role-btn" onclick="setRole('employee')">Staff</button>
+        <button class="role-btn" onclick="setRole('admin')">Admin</button>
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="page-title">Dashboard</span>
+        <span class="role-pill pill-guest" id="role-pill">Guest</span>
+      </div>
+      <div class="topbar-right">
+        <div class="notif-btn">🔔</div>
+        <div class="avatar avatar-g" id="user-avatar">GU</div>
+      </div>
+    </div>
+    <div class="content" id="main-content"></div>
+  </div>
+</div>
+
+<script>
+const ROLES = {
+  guest: {
+    name: 'Guest',
+    initials: 'GU',
+    pillClass: 'pill-guest',
+    avatarClass: 'avatar-g',
+    btnClass: 'active-guest',
+    nav: [
+      { icon: '◻', label: 'Dashboard', id: 'dashboard' },
+      { icon: '📄', label: 'Public Docs', id: 'docs' },
+      { icon: '🔒', label: 'My Documents', locked: true },
+      { icon: '🔒', label: 'Analytics', locked: true },
+      { icon: '🔒', label: 'Admin Center', locked: true },
+    ]
+  },
+  employee: {
+    name: 'Employee',
+    initials: 'EM',
+    pillClass: 'pill-employee',
+    avatarClass: 'avatar-e',
+    btnClass: 'active-employee',
+    nav: [
+      { icon: '◻', label: 'Dashboard', id: 'dashboard' },
+      { icon: '📄', label: 'My Documents', id: 'docs' },
+      { icon: '📂', label: 'Shared Assets', id: 'assets' },
+      { icon: '📊', label: 'Analytics', id: 'analytics' },
+      { icon: '🔒', label: 'Admin Center', locked: true },
+    ]
+  },
+  admin: {
+    name: 'Admin',
+    initials: 'AD',
+    pillClass: 'pill-admin',
+    avatarClass: 'avatar-a',
+    btnClass: 'active-admin',
+    nav: [
+      { icon: '◻', label: 'Dashboard', id: 'dashboard' },
+      { icon: '📄', label: 'All Documents', id: 'docs' },
+      { icon: '📊', label: 'Analytics', id: 'analytics' },
+      { icon: '🛡', label: 'Admin Center', id: 'admin' },
+      { icon: '👥', label: 'User Management', id: 'users' },
+    ]
+  }
+};
+
+const DOCS = [
+  { id: 'DOC-001', name: 'Q4 Strategy Report', owner: 'Sarah Chen', type: 'Automation', status: 'Pending', public: false },
+  { id: 'DOC-002', name: 'Market Research V2', owner: 'David Vance', type: 'Extraction', status: 'Reviewing', public: true },
+  { id: 'DOC-003', name: 'Finance Report Final', owner: 'Elena Rodriguez', type: 'Automation', status: 'Approved', public: true },
+  { id: 'DOC-004', name: 'Internal Policy Update', owner: 'System Oracle', type: 'Extraction', status: 'Rejected', public: false },
+];
+
+const USERS = [
+  { name: 'Sarah Chen', email: 'sarah@co.com', role: 'employee', status: 'Active', docs: 12 },
+  { name: 'David Vance', email: 'david@co.com', role: 'employee', status: 'Active', docs: 7 },
+  { name: 'Guest User', email: 'guest@co.com', role: 'guest', status: 'Active', docs: 0 },
+  { name: 'Elena Rodriguez', email: 'elena@co.com', role: 'admin', status: 'Active', docs: 31 },
+];
+
+let currentRole = 'guest';
+let currentPage = 'dashboard';
+
+function setRole(role) {
+  currentRole = role;
+  currentPage = 'dashboard';
+  document.querySelectorAll('.role-btn').forEach(b => {
+    b.className = 'role-btn';
+  });
+  event.target.className = 'role-btn ' + ROLES[role].btnClass;
+  const pill = document.getElementById('role-pill');
+  pill.className = 'role-pill ' + ROLES[role].pillClass;
+  pill.textContent = ROLES[role].name;
+  const av = document.getElementById('user-avatar');
+  av.className = 'avatar ' + ROLES[role].avatarClass;
+  av.textContent = ROLES[role].initials;
+  renderNav();
+  renderContent();
+}
+
+function renderNav() {
+  const r = ROLES[currentRole];
+  const nav = document.getElementById('nav-links');
+  nav.innerHTML = r.nav.map(item => {
+    if (item.locked) {
+      return `<div class="nav-item locked">${item.icon} ${item.label}<span class="lock-badge">🔒</span></div>`;
+    }
+    const active = item.id === currentPage ? 'active' : '';
+    return `<div class="nav-item ${active}" onclick="navigate('${item.id}')">${item.icon} ${item.label}</div>`;
+  }).join('');
+}
+
+function navigate(page) {
+  currentPage = page;
+  renderNav();
+  renderContent();
+  document.getElementById('page-title').textContent = {
+    dashboard: 'Dashboard', docs: currentRole === 'admin' ? 'All Documents' : currentRole === 'guest' ? 'Public Docs' : 'My Documents',
+    assets: 'Shared Assets', analytics: 'Analytics', admin: 'Admin Center', users: 'User Management'
+  }[page] || page;
+}
+
+function statusPill(s) {
+  const cls = { Pending: 's-pending', Approved: 's-approved', Rejected: 's-rejected', Reviewing: 's-reviewing' }[s] || '';
+  return `<span class="status-pill ${cls}">${s}</span>`;
+}
+
+function renderContent() {
+  const c = document.getElementById('main-content');
+  if (currentPage === 'dashboard') c.innerHTML = renderDashboard();
+  else if (currentPage === 'docs') c.innerHTML = renderDocs();
+  else if (currentPage === 'analytics') c.innerHTML = renderAnalytics();
+  else if (currentPage === 'admin') c.innerHTML = renderAdmin();
+  else if (currentPage === 'users') c.innerHTML = renderUsers();
+  else if (currentPage === 'assets') c.innerHTML = renderAssets();
+}
+
+function renderDashboard() {
+  const isAdmin = currentRole === 'admin';
+  const isGuest = currentRole === 'guest';
+  const blur = isGuest ? 'stat-blurred' : '';
+  const stats = [
+    { icon: '📄', label: 'Total Documents', value: isGuest ? '—' : '1,284', bg: '#E6F1FB' },
+    { icon: '⏳', label: 'Pending Review', value: isGuest ? '—' : '42', bg: '#FAEEDA' },
+    { icon: '✅', label: 'Approved Today', value: isGuest ? '—' : '18', bg: '#EAF3DE' },
+    { icon: '⚠', label: 'Rejected', value: isGuest ? '—' : '3', bg: '#FCEBEB' },
+  ];
+  const statsHtml = `<div class="stats-grid">${stats.map(s => `
+    <div class="stat-card">
+      <div class="stat-icon" style="background:${s.bg}">${s.icon}</div>
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value">${s.value}</div>
+    </div>`).join('')}</div>`;
+
+  const insightHtml = `<div class="insight-card">
+    <div class="insight-header"><span class="insight-tag">AI Insight</span><span style="font-size:11px;color:var(--color-text-tertiary)">Analysis complete</span></div>
+    <div class="insight-title">Workflow bottleneck in "Q4 Strategy"</div>
+    <div class="insight-body">Review cycles have exceeded typical velocity. Merging three feedback threads could accelerate approval by 48 hours.</div>
+  </div>`;
+
+  const visibleDocs = DOCS.filter(d => currentRole !== 'guest' || d.public);
+  const docsHtml = `
+    <div class="section-header"><span class="section-title">Recent documents</span>${!isGuest ? `<button class="section-action" onclick="navigate('docs')">View all →</button>` : ''}</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Name</th><th>Owner</th><th>Status</th>${isAdmin ? '<th>Actions</th>' : ''}</tr></thead>
+      <tbody>${visibleDocs.slice(0, 3).map(d => `<tr>
+        <td style="color:#378ADD;font-size:11px">${d.id}</td>
+        <td>${d.name}${!d.public ? ' <span style="font-size:10px;color:var(--color-text-tertiary)">[restricted]</span>' : ''}</td>
+        <td>${d.owner}</td>
+        <td>${statusPill(d.status)}</td>
+        ${isAdmin ? `<td><button class="action-btn approve">Approve</button> <button class="action-btn reject">Reject</button></td>` : ''}
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+
+  return statsHtml + (currentRole !== 'guest' ? insightHtml : '') + docsHtml;
+}
+
+function renderDocs() {
+  const isAdmin = currentRole === 'admin';
+  const isGuest = currentRole === 'guest';
+  const visibleDocs = isGuest ? DOCS.filter(d => d.public) : DOCS;
+  return `
+    <div class="section-header"><span class="section-title">${isGuest ? 'Public documents' : isAdmin ? 'All documents' : 'My documents'}</span>
+      ${isAdmin ? `<button class="action-btn approve" style="font-size:12px">+ New Document</button>` : ''}
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Document</th><th>Owner</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${visibleDocs.map(d => `<tr>
+        <td style="color:#378ADD;font-size:11px">${d.id}</td>
+        <td>${d.name}</td>
+        <td>${d.owner}</td>
+        <td><span style="font-size:10px;background:var(--color-background-secondary);padding:2px 6px;border-radius:4px;color:var(--color-text-secondary)">${d.type}</span></td>
+        <td>${statusPill(d.status)}</td>
+        <td>
+          ${isAdmin ? `<button class="action-btn approve">Approve</button> <button class="action-btn reject">Reject</button>` :
+            isGuest ? `<button class="action-btn">View</button>` :
+            `<button class="action-btn">Edit</button> <button class="action-btn">View</button>`}
+        </td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+function renderAnalytics() {
+  if (currentRole === 'guest') return `<div class="access-denied"><div class="denied-icon">🔒</div><div class="denied-title">Access restricted</div><div class="denied-sub">Analytics are available to employees and admins only.</div></div>`;
+  const bars = [30, 55, 42, 70, 88, 95];
+  const barsHtml = bars.map((h, i) => `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+    <div style="width:100%;height:${h}px;background:${i===5?'#7F77DD':'#D3D1C7'};border-radius:4px 4px 0 0"></div>
+    <span style="font-size:10px;color:var(--color-text-tertiary)">W${i+1}</span>
+  </div>`).join('');
+  return `
+    <div class="section-header"><span class="section-title">Document velocity</span></div>
+    <div class="insight-card">
+      <div style="display:flex;align-items:flex-end;gap:8px;height:100px;margin-bottom:8px">${barsHtml}</div>
+      <div style="font-size:12px;color:var(--color-text-secondary)">Processing efficiency <strong style="color:var(--color-text-primary)">+24.8%</strong> this month</div>
+    </div>
+    <div class="stats-grid">
+      ${[['Avg. review time','2.4 hrs'],['Approval rate','81%'],['AI accuracy','94%'],['Docs/day','32']].map(([l,v])=>`
+      <div class="stat-card"><div class="stat-label">${l}</div><div class="stat-value" style="font-size:20px">${v}</div></div>`).join('')}
+    </div>`;
+}
+
+function renderAdmin() {
+  if (currentRole !== 'admin') return `<div class="access-denied"><div class="denied-icon">🛡</div><div class="denied-title">Admin only</div><div class="denied-sub">You need admin privileges to access this panel.</div></div>`;
+  return `
+    <div class="section-header"><span class="section-title">Role permissions</span></div>
+    <div class="perm-grid">
+      ${[
+        { role: 'Guest', cls: 'pill-guest', perms: [['View public docs','✓'],['Download docs','✗'],['Upload docs','✗'],['Approve docs','✗'],['Manage users','✗']] },
+        { role: 'Employee', cls: 'pill-employee', perms: [['View public docs','✓'],['Download docs','✓'],['Upload docs','✓'],['Approve docs','✗'],['Manage users','✗']] },
+        { role: 'Admin', cls: 'pill-admin', perms: [['View public docs','✓'],['Download docs','✓'],['Upload docs','✓'],['Approve docs','✓'],['Manage users','✓']] },
+      ].map(p => `<div class="perm-card">
+        <span class="perm-role ${p.cls}">${p.role}</span>
+        <ul class="perm-list">${p.perms.map(([label,val])=>`<li><span class="${val==='✓'?'check':'cross'}">${val}</span>${label}</li>`).join('')}</ul>
+      </div>`).join('')}
+    </div>
+    <div class="section-header"><span class="section-title">Pending approvals</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Document</th><th>Owner</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${DOCS.filter(d=>d.status==='Pending'||d.status==='Reviewing').map(d=>`<tr>
+        <td>${d.name}</td><td>${d.owner}</td><td>${statusPill(d.status)}</td>
+        <td><button class="action-btn approve">Approve</button> <button class="action-btn reject">Reject</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+function renderUsers() {
+  if (currentRole !== 'admin') return `<div class="access-denied"><div class="denied-icon">🔒</div><div class="denied-title">Admin only</div><div class="denied-sub">User management requires admin privileges.</div></div>`;
+  const rolePills = { guest: 'pill-guest', employee: 'pill-employee', admin: 'pill-admin' };
+  return `
+    <div class="section-header"><span class="section-title">All users</span><button class="action-btn approve" style="font-size:12px">+ Invite user</button></div>
+    <div class="user-table-wrap"><table>
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Docs</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${USERS.map(u=>`<tr>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar ${rolePills[u.role]}" style="width:26px;height:26px;font-size:10px">${u.name.split(' ').map(n=>n[0]).join('')}</div>${u.name}</div></td>
+        <td style="color:var(--color-text-secondary)">${u.email}</td>
+        <td><span class="role-pill ${rolePills[u.role]}">${u.role}</span></td>
+        <td>${u.docs}</td>
+        <td><span class="status-pill s-approved">${u.status}</span></td>
+        <td><button class="action-btn">Edit role</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+function renderAssets() {
+  return `
+    <div class="section-header"><span class="section-title">Shared assets</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>Shared by</th><th>Status</th></tr></thead>
+      <tbody>${DOCS.filter(d=>d.public).map(d=>`<tr>
+        <td>${d.name}</td><td>${d.type}</td><td>${d.owner}</td><td>${statusPill(d.status)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+renderNav();
+renderContent();
+</script>
