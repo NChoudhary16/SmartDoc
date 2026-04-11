@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { CheckCircle2 } from 'lucide-react';
 import { getAuthHeaders } from '@/lib/auth';
 import { useAuth } from '@/context/AuthContext';
 import { submitDocumentForReview, ApiRequestError, API_URL, API_ORIGIN } from '@/lib/api';
@@ -14,6 +15,24 @@ export default function DocumentWizard() {
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [finalDoc, setFinalDoc] = useState(null);
+  const [sentToAdmin, setSentToAdmin] = useState(false);
+
+  const sanitizeForForm = (payload) => {
+    if (payload === null || payload === undefined) return '';
+    if (Array.isArray(payload)) return payload.map((item) => sanitizeForForm(item));
+    if (typeof payload === 'object') {
+      return Object.fromEntries(
+        Object.entries(payload).map(([key, value]) => [key, sanitizeForForm(value)])
+      );
+    }
+    return payload;
+  };
+
+  const toInputValue = (value) => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -39,14 +58,16 @@ export default function DocumentWizard() {
 
       const data = await response.json();
       if (data.success) {
-               setResult(data);
-        setEditedData(data.extracted_data);
+        setFinalDoc(null);
+        setSentToAdmin(false);
+        setResult(data);
+        setEditedData(sanitizeForForm(data.extracted_data || {}));
       } else {
-        alert("Processing Failed: " + data.message);
+        alert('Processing Failed: ' + data.message);
       }
     } catch (error) {
       console.error(error);
-      alert("Error connecting to backend");
+      alert('Error connecting to backend');
     } finally {
       setProcessing(false);
     }
@@ -64,13 +85,13 @@ export default function DocumentWizard() {
       }
       const response = await fetch(`${API_URL}/documents/${result.document_id}/approve`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders()
         },
         body: JSON.stringify({
           data: editedData,
-          templateName: result.suggested_template?.file_path || "default_template.docx",
+          templateName: result.suggested_template?.file_path || 'default_template.docx',
           department: editedData.department || editedData.target_department || 'operations'
         }),
       });
@@ -88,11 +109,11 @@ export default function DocumentWizard() {
         const issueText = data.validation?.issues?.length
           ? `\n\nValidation issues:\n${data.validation.issues.slice(0, 6).join('\n')}`
           : '';
-        alert("Generation Failed: " + data.message + issueText);
+        alert('Generation Failed: ' + data.message + issueText);
       }
     } catch (error) {
       console.error(error);
-      alert("Error generating document");
+      alert('Error generating document');
     } finally {
       setGenerating(false);
     }
@@ -107,6 +128,8 @@ export default function DocumentWizard() {
         template_name: result.suggested_template?.file_path || null,
         template_id: result.suggested_template?.id || null
       });
+      setSentToAdmin(true);
+      setResult((prev) => (prev ? { ...prev, auto_submitted_to_admin: true } : prev));
       alert(
         'Your draft passed reverification and is in the admin queue. An administrator will approve it to generate the final DOCX and route it to the correct department.'
       );
@@ -127,90 +150,100 @@ export default function DocumentWizard() {
   return (
     <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-3xl p-8 shadow-[0_20px_40px_-20px_rgba(30,58,138,0.1)]">
       <h2 className="font-display text-2xl font-semibold text-slate-800 mb-6">DocuFlow Pipeline</h2>
-      
+
       {!result ? (
         <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-indigo-200 rounded-2xl bg-indigo-50/50">
-           {processing ? (
-             <div className="text-center">
-                <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="font-sans text-sm font-bold text-indigo-700 tracking-wider">AI EXTRACTING DATA...</p>
-             </div>
-           ) : (
-             <>
+          {processing ? (
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="font-sans text-sm font-bold text-indigo-700 tracking-wider">PROCESSING DOCUMENT...</p>
+            </div>
+          ) : (
+            <>
               <input type="file" onChange={handleFileChange} className="mb-4" accept="image/*,.pdf,.docx" />
-               <motion.button 
-                 whileHover={{ scale: 1.05 }}
-                 whileTap={{ scale: 0.95 }}
-                 onClick={handleProcess}
-                 disabled={!file}
-                 className={`px-8 py-3 rounded-full font-bold tracking-wide text-xs uppercase ${file ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
-               >
-                 Process Document
-               </motion.button>
-             </>
-           )}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleProcess}
+                disabled={!file}
+                className={`px-8 py-3 rounded-full font-bold tracking-wide text-xs uppercase ${file ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+              >
+                Process Document
+              </motion.button>
+            </>
+          )}
         </div>
       ) : !finalDoc ? (
         <div className="space-y-6">
+          {user?.role !== 'admin' && !sentToAdmin && !result?.auto_submitted_to_admin && (
+            <div className="rounded-xl border border-indigo-200/80 bg-indigo-50/90 px-4 py-3 text-sm text-indigo-900">
+              Verify the fields below, then use <span className="font-bold">Submit for admin approval</span>. The server
+              reverifies your data when you submit—nothing is sent to the admin queue until you do.
+            </div>
+          )}
+
           <div className="bg-indigo-50 p-4 rounded-xl">
-             <h3 className="text-indigo-800 font-bold mb-2">RAG-matched template (by category)</h3>
-             <p className="text-indigo-900 font-semibold">{result.suggested_template?.name || "Unknown Template"}</p>
-             <p className="text-xs text-indigo-700 mt-1">
-               Category: {result.suggested_template?.type || result.validation?.document_type || '—'} · DOCX:{' '}
-               {result.suggested_template?.file_path || '—'}
-             </p>
-             {result.department && (
-               <p className="text-xs text-slate-600 mt-1">
-                 Routed department after approval: <span className="font-bold uppercase">{result.department}</span>
-               </p>
-             )}
-             <p className="text-sm text-indigo-600 truncate mt-2">{result.summary}</p>
-             <p className="mt-2 text-xs text-slate-500">
-               Final product: <strong>DOCX</strong> from this template, filled from your upload + edits.
-             </p>
-             {result.review_hint && (
-               <p className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5">
-                 {result.review_hint}
-               </p>
-             )}
-             <p className="mt-2 text-xs text-slate-500">
-               Editable output: {(result.editable_output_formats || ['docx']).join(', ').toUpperCase()}
-             </p>
-             {result.validation && (
-               <p className="mt-1 text-xs text-slate-500">
-                 Validation: {result.validation.passed ? 'Passed institutional checks' : `Needs fixes (${result.validation.missing_fields.length} missing fields)`}
-               </p>
-             )}
-             {result.preview_url && (
-               <a
-                 href={`${API_ORIGIN}${result.preview_url}`}
-                 target="_blank"
-                 rel="noreferrer"
-                 className="inline-block mt-2 text-xs font-bold text-indigo-700 underline"
-               >
-                 Open generated preview PDF
-               </a>
-             )}
-             <p className="mt-2 text-xs text-slate-500">
-               LLM verification: {result.verification?.approved ? 'Passed' : 'Needs manual review'}
-             </p>
+            <h3 className="text-indigo-800 font-bold mb-2">RAG-matched template (by category)</h3>
+            <p className="text-indigo-900 font-semibold">{result.suggested_template?.name || 'Unknown Template'}</p>
+            <p className="text-xs text-indigo-700 mt-1">
+              Category: {result.suggested_template?.type || result.validation?.document_type || '-'} - DOCX:{' '}
+              {result.suggested_template?.file_path || '-'}
+            </p>
+            {result.department && (
+              <p className="text-xs text-slate-600 mt-1">
+                Routed department after approval: <span className="font-bold uppercase">{result.department}</span>
+              </p>
+            )}
+            <p className="text-sm text-indigo-600 truncate mt-2">{result.summary}</p>
+            <p className="mt-2 text-xs text-slate-500">
+              Final product: <strong>DOCX</strong> from this template, filled from your upload + edits.
+            </p>
+            {result.review_hint && (
+              <p className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5">
+                {result.review_hint}
+              </p>
+            )}
+            <p className="mt-2 text-xs text-slate-500">
+              Editable output: {(result.editable_output_formats || ['docx']).join(', ').toUpperCase()}
+            </p>
+            {result.validation && (
+              <p className="mt-1 text-xs text-slate-500">
+                Validation: {result.validation.passed ? 'Passed institutional checks' : `Needs fixes (${result.validation.missing_fields.length} missing fields)`}
+              </p>
+            )}
+            {result.preview_url && (
+              <a
+                href={`${API_ORIGIN}${result.preview_url}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block mt-2 text-xs font-bold text-indigo-700 underline"
+              >
+                Open generated preview PDF
+              </a>
+            )}
+            <p className="mt-2 text-xs text-slate-500">
+              LLM verification: {result.verification?.approved ? 'Passed' : 'Needs manual review'}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Extraction mode: {(result.extraction_mode || 'llm').toUpperCase()}
+            </p>
           </div>
 
           <div>
-             <h3 className="font-bold text-slate-800 mb-4">Verify & Edit Data</h3>
-             <div className="grid grid-cols-2 gap-4">
-                {Object.keys(editedData).map(key => (
-                  <div key={key}>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{key.replace(/_/g, ' ')}</label>
-                    <input 
-                      type="text" 
-                      value={typeof editedData[key] === 'object' ? JSON.stringify(editedData[key]) : editedData[key]}
-                      onChange={(e) => handleFieldChange(key, e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-700 bg-white"
-                    />
-                  </div>
-                ))}
-             </div>
+            <h3 className="font-bold text-slate-800 mb-4">Verify & Edit Data</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {Object.keys(editedData).map((key) => (
+                <div key={key}>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{key.replace(/_/g, ' ')}</label>
+                  <input
+                    type="text"
+                    value={toInputValue(editedData[key])}
+                    onChange={(e) => handleFieldChange(key, e.target.value)}
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-700 bg-white"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="pt-6">
@@ -224,6 +257,14 @@ export default function DocumentWizard() {
               >
                 {generating ? 'Generating File...' : 'Approve & Generate DOCX'}
               </motion.button>
+            ) : sentToAdmin || result?.auto_submitted_to_admin ? (
+              <div
+                role="status"
+                className="w-full px-8 py-4 rounded-xl font-bold text-sm tracking-wide flex justify-center items-center gap-2.5 border border-indigo-200/80 bg-indigo-50/90 text-indigo-800 shadow-sm cursor-default"
+              >
+                <CheckCircle2 className="w-5 h-5 text-indigo-600 shrink-0" aria-hidden />
+                Already sent to admin
+              </div>
             ) : (
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -232,25 +273,26 @@ export default function DocumentWizard() {
                 disabled={submitting}
                 className="w-full px-8 py-4 rounded-xl font-bold text-white uppercase tracking-widest bg-indigo-600 shadow-xl shadow-indigo-500/20 flex justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {submitting ? 'Submitting…' : 'Submit For Admin Approval'}
+                {submitting ? 'Submitting...' : 'Submit For Admin Approval'}
               </motion.button>
             )}
           </div>
         </div>
       ) : (
         <div className="text-center p-8 bg-emerald-50 rounded-2xl border border-emerald-200">
-           <div className="w-16 h-16 bg-emerald-500 text-white rounded-full flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
-           <h3 className="text-xl font-bold text-emerald-900 mb-2">Document Ready!</h3>
-           <a 
-             href={`${API_ORIGIN}${finalDoc}`} 
-             target="_blank" 
-             rel="noreferrer"
-             className="inline-block mt-4 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full transition-colors"
-           >
-             Download Final File
-           </a>
+          <div className="w-16 h-16 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">OK</div>
+          <h3 className="text-xl font-bold text-emerald-900 mb-2">Document Ready!</h3>
+          <a
+            href={`${API_ORIGIN}${finalDoc}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block mt-4 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full transition-colors"
+          >
+            Download Final File
+          </a>
         </div>
       )}
     </div>
   );
 }
+

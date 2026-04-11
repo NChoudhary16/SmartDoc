@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
 const ocrService = require('../services/ocrService');
-const aiService = require('../services/aiService');
-const ragService = require('../services/ragServiceV2');
+const aiService = require('../services/aiServiceV2');
+const mockExtractionService = require('../services/mockExtractionService');
+const ragService = require('../services/ragService');
 const lifecycleService = require('../services/documentLifecycleServiceV2');
 const dispatchService = require('../services/dispatchService');
 const validationService = require('../services/documentValidationService');
@@ -23,6 +24,8 @@ router.post('/process', requireAuth, requireRole('startup', 'mentor', 'employee'
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
+
+    const useMockExtraction = String(process.env.USE_MOCK_EXTRACTION || 'false').toLowerCase() === 'true';
 
     const filePath = req.file.path;
     const originalFile = req.file.filename;
@@ -47,7 +50,7 @@ router.post('/process', requireAuth, requireRole('startup', 'mentor', 'employee'
     });
 
     // 2. AI Extraction Step (JSON Source of Truth)
-    const extractionResult = await aiService.extractData(rawText);
+    const extractionResult = useMockExtraction ? mockExtractionService.extractData(rawText) : await aiService.extractData(rawText);
     const extractedData = extractionResult.data || {};
 
     // 3. RAG: vector similarity + optional category (document type) filter → DOCX template from DB
@@ -90,12 +93,19 @@ router.post('/process', requireAuth, requireRole('startup', 'mentor', 'employee'
       }
     });
 
-    // 5. LLM verification gate before admin review
-    const verification = await aiService.verifyGeneratedData({
-      extractedData,
-      generatedData: extractedData,
-      documentType: extractionResult.document_type
-    });
+    // 5. Verification gate (skip LLM call when mock extraction is enabled)
+    const verification = useMockExtraction
+      ? {
+          approved: true,
+          confidence: 1,
+          issues: [],
+          missing_fields: []
+        }
+      : await aiService.verifyGeneratedData({
+          extractedData,
+          generatedData: extractedData,
+          documentType: extractionResult.document_type
+        });
     documentRecord = await lifecycleService.updateDocument(documentRecord.id, {
       status: 'llm_verified',
       verification_report: verification
@@ -105,22 +115,23 @@ router.post('/process', requireAuth, requireRole('startup', 'mentor', 'employee'
       ? 'Initial validation issues — correct fields below, then submit for admin.'
       : !verification.approved
         ? 'Automated audit suggests review — you may still submit; admin will decide.'
-        : null;
-
+        : 'Review and edit the extracted data, then use Submit for admin approval. Your draft is reverified on submit before it joins the queue.';
+    const finalStatus = 'awaiting_submitter';
     documentRecord = await lifecycleService.updateDocument(documentRecord.id, {
-      status: 'awaiting_submitter',
+      status: finalStatus,
       review_comments: draftNote,
+      history_note: undefined,
       artifacts: {
         ...(documentRecord.artifacts || {}),
         pipeline: {
           source_file: originalFile,
           matched_template_file: suggestedTemplate?.file_path || null,
           matched_template_name: suggestedTemplate?.name || null,
-          category: extractionResult.document_type || suggestedTemplate?.type || null
+          category: extractionResult.document_type || suggestedTemplate?.type || null,
+          extraction_mode: useMockExtraction ? 'mock' : 'llm'
         }
       }
     });
-
     res.json({
       success: true,
       document_id: documentRecord.id,
@@ -130,11 +141,13 @@ router.post('/process', requireAuth, requireRole('startup', 'mentor', 'employee'
       summary: extractionResult.summary,
       verification,
       validation: validationReport,
-      status: 'awaiting_submitter',
+      status: finalStatus,
       department: routedDepartment,
       review_hint: draftNote,
       preview_url: `/uploads/${previewPdf}`,
-      editable_output_formats: validationReport.editable_output_formats
+      editable_output_formats: validationReport.editable_output_formats,
+      extraction_mode: useMockExtraction ? 'mock' : 'llm',
+      auto_submitted_to_admin: false
     });
   } catch (error) {
     next(error);
@@ -459,3 +472,4 @@ router.post('/:id/flag', requireAuth, requireRole('admin'), async (req, res, nex
 
 
 module.exports = router;
+

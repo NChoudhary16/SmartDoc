@@ -51,9 +51,9 @@ const templateCatalog = [
     id: 't4',
     name: 'Standard Invoice',
     type: 'Invoice',
-    description: 'Standard corporate invoice with tax and vendor format requirements.',
-    file_path: 'invoice-template.docx',
-    manifest_file: 'invoice-template.json',
+    description: 'SmartDoc-branded invoice layout (sidebar, line table, totals bar) for finance routing.',
+    file_path: 'smartdoc-branded-invoice.docx',
+    manifest_file: 'smartdoc-branded-invoice.json',
     supported_output_formats: ['docx', 'pdf'],
     audience: ['startup', 'admin'],
     rules: {

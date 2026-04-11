@@ -66,6 +66,37 @@ class DocGenService {
     return target;
   }
 
+  /**
+   * Extra keys for smartdoc-branded-invoice.docx (aliases + sensible defaults).
+   */
+  invoiceDisplayAliases(data) {
+    const d = data && typeof data === 'object' ? data : {};
+    const taxVal = d.tax ?? d.tax_amount ?? '';
+    const subVal = d.subtotal ?? d.total_amount ?? '';
+    return {
+      client_name: d.client_name || d.bill_to || '',
+      client_address: d.client_address || d.shipping_address || '',
+      contact_phone: d.contact_phone || d.client_phone || d.vendor_phone || '',
+      bill_to: d.bill_to || d.client_name || '',
+      shipping_address: d.shipping_address || d.client_address || '',
+      tax: taxVal,
+      subtotal: subVal,
+      due_date: d.due_date || '',
+      company_website: d.company_website || 'www.smartdoc.ai',
+      vendor_address: d.vendor_address || '',
+      vendor_email: d.vendor_email || d.support_email || 'hello@smartdoc.ai',
+      support_email: d.support_email || d.vendor_email || 'hello@smartdoc.ai',
+      support_phone: d.support_phone || d.vendor_phone || d.contact_phone || '',
+      payment_terms: d.payment_terms || 'Payment due as agreed. Late fees may apply per policy.',
+      signer_name: d.signer_name || d.vendor_contact_name || '',
+      signer_title: d.signer_title || 'Authorized representative',
+      item_1_desc: d.item_1_desc || d.line_items || '',
+      item_1_price: d.item_1_price || '',
+      item_1_qty: d.item_1_qty || '',
+      item_1_total: d.item_1_total || ''
+    };
+  }
+
   loadManifest(templateInfo = {}, templateName = '') {
     this.ensureTemplatesDir();
     const catalogTemplate =
@@ -212,9 +243,11 @@ class DocGenService {
       this.ensureUploadsDir();
       this.ensureTemplatesDir();
       const templatePath = path.resolve(__dirname, '../templates', templateName);
+      const raw = data && typeof data === 'object' ? data : {};
       const flattened = {
-        ...this.flattenData(data || {}),
-        ...(data || {})
+        ...this.flattenData(raw),
+        ...raw,
+        ...this.invoiceDisplayAliases(raw)
       };
       let buf;
 

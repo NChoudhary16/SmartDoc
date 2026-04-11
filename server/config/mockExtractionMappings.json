@@ -1,0 +1,89 @@
+{
+  "Invoice": {
+    "keywords": ["invoice", "total due", "bill to"],
+    "template_type": "Invoice",
+    "defaults": {
+      "invoice_number": "INV-MOCK-1001",
+      "date": "2026-04-11",
+      "vendor_name": "Mock Vendor Pvt Ltd",
+      "total_amount": 12500,
+      "currency": "USD",
+      "line_items": "Consulting services",
+      "bill_to": "Mock Startup",
+      "shipping_address": "NA",
+      "tax_amount": 0,
+      "notes": "Mock mapped invoice payload"
+    }
+  },
+  "Purchase Order": {
+    "keywords": ["purchase order", "po number", "shipping address"],
+    "template_type": "Purchase Order",
+    "defaults": {
+      "po_number": "PO-MOCK-2048",
+      "date": "2026-04-11",
+      "vendor_name": "Mock Procurement Vendor",
+      "shipping_address": "Mock Warehouse Address",
+      "items": "Hardware kit",
+      "quantities": "1",
+      "total_price": 9800,
+      "department": "operations",
+      "delivery_date": "2026-04-15",
+      "contact_person": "Procurement Officer",
+      "notes": "Mock mapped purchase order payload"
+    }
+  },
+  "MOU": {
+    "keywords": ["memorandum of understanding", "mou", "parties"],
+    "template_type": "MOU",
+    "defaults": {
+      "party_one": "Mock Institution",
+      "party_two": "Mock Startup",
+      "effective_date": "2026-04-11",
+      "purpose": "Mock strategic collaboration",
+      "obligations": "Both parties commit to project milestones",
+      "key_clauses": "Confidentiality, governance, term and termination"
+    }
+  },
+  "Grant Application": {
+    "keywords": ["grant", "funding request", "application"],
+    "template_type": "Grant Application",
+    "defaults": {
+      "startup_name": "Mock Startup Labs",
+      "founder_name": "Mock Founder",
+      "program_name": "Acceleration Cohort",
+      "funding_request": 50000,
+      "currency": "USD",
+      "problem_statement": "Mock problem statement from mapped OCR data",
+      "solution_summary": "Mock solution summary",
+      "use_of_funds": "Product and hiring",
+      "requested_disbursement_date": "2026-04-20",
+      "contact_email": "founder@mockstartup.com",
+      "contact_phone": "+1-000-000-0000",
+      "mentor_notes": "Requires admin validation"
+    }
+  },
+  "Review Memo": {
+    "keywords": ["review memo", "mentor notes", "recommendation"],
+    "template_type": "Review Memo",
+    "defaults": {
+      "startup_name": "Mock Startup Labs",
+      "mentor_name": "Mock Mentor",
+      "review_date": "2026-04-11",
+      "strengths": "Execution speed and market clarity",
+      "risks": "Go-to-market dependency risk",
+      "recommendation": "Proceed with conditional approval"
+    }
+  },
+  "General Document": {
+    "keywords": [],
+    "template_type": "Invoice",
+    "defaults": {
+      "invoice_number": "GEN-MOCK-0001",
+      "date": "2026-04-11",
+      "vendor_name": "Generic Mock Vendor",
+      "total_amount": 1000,
+      "currency": "USD",
+      "notes": "Generic mock payload generated from OCR"
+    }
+  }
+}

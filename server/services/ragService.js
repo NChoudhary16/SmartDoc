@@ -1,1 +1,1 @@
-module.exports = require('./ragServiceV2');
+module.exports = require('./ragServiceV3');

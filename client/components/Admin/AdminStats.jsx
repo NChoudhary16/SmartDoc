@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { FileText, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { fetchDashboardSummary } from '@/lib/api';
 
-const AdminStats = () => {
+const AdminStats = ({ refreshKey = 0 }) => {
   const [totals, setTotals] = useState({
     total_documents: 0,
     pending_review: 0,
@@ -17,17 +17,11 @@ const AdminStats = () => {
     let active = true;
     fetchDashboardSummary()
       .then((summary) => {
-        if (active && summary?.totals) {
-          setTotals(summary.totals);
-        }
+        if (active && summary?.totals) setTotals(summary.totals);
       })
-      .catch((error) => {
-        console.error('Failed to load dashboard summary', error);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+      .catch((error) => console.error('Failed to load dashboard summary', error));
+    return () => { active = false; };
+  }, [refreshKey]);
 
   const stats = [
     { label: "Total Documents", value: totals.total_documents, icon: FileText, color: "text-indigo-600", bg: "bg-indigo-50" },

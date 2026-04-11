@@ -1,7 +1,12 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getCurrentUser, loginUser as apiLogin, logoutUser as apiLogout } from '@/lib/auth';
+import {
+  getCurrentUser,
+  loginUser as apiLogin,
+  registerUser as apiRegister,
+  logoutUser as apiLogout
+} from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
 export const AuthContext = createContext(null);
@@ -12,25 +17,30 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check for logged-in user on mount
     const savedUser = getCurrentUser();
-    if (savedUser) {
-      setUser(savedUser);
-    }
+    if (savedUser) setUser(savedUser);
     setLoading(false);
   }, []);
 
-  const login = async (username, role) => {
-    const result = await apiLogin(username, role);
+  const _redirectForRole = (role) => {
+    if (role === 'admin') router.push('/admin');
+    else router.push('/dashboard');
+  };
+
+  const login = async (username, password) => {
+    const result = await apiLogin(username, password);
     if (result.success) {
       setUser(result.user);
-      
-      // Redirect based on role
-      if (result.user.role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/');
-      }
+      _redirectForRole(result.user.role);
+    }
+    return result;
+  };
+
+  const register = async (name, username, password, role) => {
+    const result = await apiRegister(name, username, password, role);
+    if (result.success) {
+      setUser(result.user);
+      _redirectForRole(result.user.role);
     }
     return result;
   };
@@ -45,6 +55,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     login,
+    register,
     logout,
     isAuthenticated: !!user
   };
@@ -58,8 +69,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

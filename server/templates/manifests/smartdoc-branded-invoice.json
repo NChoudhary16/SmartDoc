@@ -1,0 +1,42 @@
+{
+  "title": "SmartDoc Branded Invoice",
+  "intro": "Final invoice DOCX after admin approval — matches Smart DOC Ai visual layout.",
+  "sections": [
+    {
+      "heading": "Header",
+      "fields": [
+        "invoice_number",
+        "date",
+        "due_date",
+        "currency",
+        "bill_to",
+        "shipping_address",
+        "contact_phone",
+        "vendor_name",
+        "vendor_address",
+        "vendor_email",
+        "signer_name",
+        "signer_title",
+        "payment_terms"
+      ]
+    },
+    {
+      "heading": "Amounts",
+      "fields": ["subtotal", "tax", "tax_amount", "total_amount", "notes"]
+    },
+    {
+      "heading": "Line items (optional rows)",
+      "fields": [
+        "item_1_desc",
+        "item_1_price",
+        "item_1_qty",
+        "item_1_total",
+        "item_2_desc",
+        "item_2_price",
+        "item_2_qty",
+        "item_2_total",
+        "line_items"
+      ]
+    }
+  ]
+}
